@@ -21,13 +21,9 @@ app.get("/products", async (req, res) => {
 
   if (limit) { // Valida que se haya informado el limite
     const productLimit = products.slice(0, limit);
-    res.send(`<h1>Se informan ${productLimit.length} productos: </h1> 
-              </br>
-              ${JSON.stringify(productLimit)}`); //Muestra los productos Limitados
+    res.send(JSON.stringify(productLimit)); //Muestra los productos Limitados
   } else {
-    res.send(`<h1>Se informan todos los productos: </h1> 
-              </br>
-              ${JSON.stringify(products)}`); // Muestro todos los productos
+    res.send(JSON.stringify(products)); // Muestro todos los productos
   }
 });
 
@@ -41,9 +37,7 @@ app.get("/products/:pid", async (req, res) => {
 
   if (exist) {
     const indice = products.findIndex((product) => product.id === pid);
-    res.send(`<h1>El producto con ID ${pid} es el: </h1> 
-              </br>
-    ${JSON.stringify(products[indice])}`); //Devuelve el producto con el id
+    res.send(JSON.stringify(products[indice])); //Devuelve el producto con el id
   } else {
     res.send("<h1>No existe el Id informado</h1>"); //Informa que no existe un producto con el id informado
   }
