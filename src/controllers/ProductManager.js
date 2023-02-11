@@ -21,26 +21,67 @@ class ProductManager{
 
   // Consulta el archivo. En caso de no existir datos crea el archivo
   getProducts = async() => {
-      try{
-        const fileInformation = await fs.readFile(this.path, 'utf-8')  //Pasar de JSON a Objeto
-        const products = JSON.parse(fileInformation)
-        //devuelve productos
-        return products  
-        
-      } catch (error){
-        //console.log("error del catch: ",error);
-        //si da error es porque no existe y lo creo
-        const answer = await this.createFile()
-        return answer        
-      }      
-  } 
-
-  // Añade nuevo producto
-  addProduct = async(title, description, price, thumnail, code, stock) => {    
     try{
-      const newProduct = {title, description, price, thumnail, code, stock} //crea un objeto con los datos de entrada
+      const fileInformation = await fs.readFile(this.path, 'utf-8')  //Pasar de JSON a Objeto
+      const products = JSON.parse(fileInformation)
+      //devuelve productos
+      return products  
       
-      if (!(this.hasVoid(newProduct))) { //valida si tiene campos vacios
+    } catch (error){        
+      //si da error es porque no existe y lo creo
+      const answer = await this.createFile()
+      return answer        
+    }      
+  } 
+    
+  //Busca producto por ID
+  getProductById = async(id) => {
+    const idParseInt = parseInt(id)
+    try{              
+      if (id) {
+        const products = await this.getProducts();
+  
+        //si hay productos busca si hay alguno con ese ID
+        if (products.length!==0){
+          const productFilter = products.filter(element => element.id === idParseInt)
+
+          if (productFilter.length !== 0) {
+            return productFilter[0]
+          } else {
+            return "No existe ningun producto con ese ID";
+          }
+        } else {
+          return "No hay productos";
+        }
+      } else {
+        return "Se debe informar un ID";
+      }
+    }catch (error){
+      console.log(error);
+    }
+  }   
+  //Elimina producto por ID
+  deleteProduct = async(id) => {
+    const idParseInt = parseInt(id)
+    const productExist = await this.getProductById(idParseInt); // Valido que exista el ID
+    
+    if (productExist?.id ){
+      const products = await this.getProducts();
+      const productFilter = products.filter(element => element.id !== idParseInt) // saco el producto con el id
+      await fs.writeFile(this.path,JSON.stringify(productFilter)) // grabo 
+      return true
+    } else {
+      return productExist // en caso de no existir el id muestro mensaje 
+    }    
+  }  
+    
+  // Añade nuevo producto
+  addProduct = async(product) => {    
+    try{      
+      
+      console.log("viendo ando", product);
+
+      if (!(this.hasVoid(product))) { //valida si tiene campos vacios
         const products = await this.getProducts();
   
         const ordProduct = products.sort((a, b)=> { //ordena descendentemente
@@ -61,61 +102,34 @@ class ProductManager{
         
         const id = ProductManager.autoincrementalID(idAux);
 
-        products.push({id,...newProduct} )   
+        products.push({id,...product} )   
         await fs.writeFile(this.path, JSON.stringify(products))
         return true
             
       } else {
-        return `Hay campos vacios! -> ", ${newProduct}`
+        return `Hay campos vacios! -> ", ${JSON.stringify(product)}`
       }
     }catch (error){
       console.log(error);
     }
   } 
 
-  //Busca producto por ID
-  getProductById = async(id) => {
-    try{
-            
-      if (id) {
-        const products = await this.getProducts();
-  
-        //si hay productos busca si hay alguno con ese ID
-        if (products.length!==0){
-          const productFilter = products.filter(element => element.id === id)
-
-          if (productFilter.length !== 0) {
-            return productFilter[0]
-          } else {
-            return "No existe ningun producto con ese ID";
-          }
-        } else {
-          return "No hay productos";
-        }
-      } else {
-        return "Se debe informar un ID";
-      }
-    }catch (error){
-      console.log(error);
-    }
-  }   
-
   //Actualizao producto por ID
-  updateProduct = async(id, title, description, price, thumnail, code, stock) => {
-
-    const productExist = await this.getProductById(id); // Valido que exista el ID
+  updateProduct = async(id, product) => {
+    const idParseInt = parseInt(id)
+    const productExist = await this.getProductById(idParseInt); // Valido que exista el ID
 
     if (productExist?.id ){
       const products = await this.getProducts();
       
-      const index = products.findIndex(element => element.id === id) // Busco el indice del elemento
-      
-      title && (products[index].title = title)
-      description && (products[index].description = description)
-      price && (products[index].price = price)
-      thumnail && (products[index].thumnail = thumnail)
-      code && (products[index].code = code)
-      stock && (products[index].stock = stock)
+      const index = products.findIndex(element => element.id === idParseInt) // Busco el indice del elemento
+
+      product.title && (products[index].title = product.title)
+      product.description && (products[index].description = product.description)
+      product.price && (products[index].price = product.price)
+      product.thumnail && (products[index].thumnail = product.thumnail)
+      product.code && (products[index].code = product.code)
+      product.stock && (products[index].stock = product.stock)
       
       await fs.writeFile(this.path,JSON.stringify(products)) // grabo 
       return true
@@ -124,20 +138,6 @@ class ProductManager{
     }    
   }   
 
-  //Elimina producto por ID
-  deleteProduct = async(id) => {
-
-    const productExist = await this.getProductById(id); // Valido que exista el ID
-    
-    if (productExist?.id ){
-      const products = await this.getProducts();
-      const productFilter = products.filter(element => element.id !== id) // saco el producto con el id
-      await fs.writeFile(this.path,JSON.stringify(productFilter)) // grabo 
-      return true
-    } else {
-      return productExist // en caso de no existir el id muestro mensaje 
-    }    
-  }
     
   //Valida que todos los campos esten completos
   hasVoid(obj) {
@@ -159,9 +159,8 @@ export default ProductManager;
 
 
 /* 
-
 //Crea nueva instancia de ProductManager
-const administrador = new ProductManager("./products.txt");
+const administrador = new ProductManager("src/models/products.txt");
 
 
 const crear = async (title, description, price, thumnail, code, stock) => {
