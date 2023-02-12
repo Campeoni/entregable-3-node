@@ -1,7 +1,8 @@
 import express, { application } from "express";
 import {__dirname} from "./path.js"
 import multer from 'multer'
-import routerProduct from './routes/productos.routes.js'
+import routerProducts from './routes/products.routes.js'
+import routerCarts from './routes/carts.routes.js'
 
 const upload = multer({dest:"src/public/img"})
 /* const storage = multer.diskStorage({
@@ -20,7 +21,8 @@ app.use(express.urlencoded({ extended: true })); //Permite realizar consultas en
 
 //Routes
 app.use('/static', express.static(__dirname + '/public'))
-app.use('/api/products', routerProduct)
+app.use('/api/products', routerProducts)
+app.use('/api/carts', routerCarts)
 app.use('/upload', upload.single('product'), (req,res) =>{
   console.log(req.file);
   res.send("imagen cargada")
