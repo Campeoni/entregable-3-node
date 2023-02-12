@@ -38,8 +38,8 @@ class CartsManager{
     
   //Busca carrito por ID
   getCartById = async(id) => {
-    const idParseInt = parseInt(id)
     try{              
+      const idParseInt = parseInt(id)
       if (idParseInt) {
         const carts = await this.getCarts();
   
